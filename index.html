@@ -1,161 +1,621 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="AWS VPC Peering project demonstrating secure private communication between two Amazon VPCs.">
-  <title>AWS VPC Peering | Cloud Networking Project</title>
+  <meta name="theme-color" content="#080d18">
+  <meta name="description" content="Hands-on AWS VPC Peering project by Roshan Sawant, demonstrating private EC2 connectivity, route tables, security groups and bastion access.">
+  <title>AWS VPC Peering | Roshan Sawant</title>
+
   <style>
+    :root {
+      --bg: #080d18;
+      --panel: #101827;
+      --panel-light: #141f31;
+      --border: #27354a;
+      --text: #edf3fc;
+      --muted: #9baac0;
+      --blue: #7dd3fc;
+      --green: #86efac;
+      --purple: #c4b5fd;
+    }
+
     * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 85px; }
+
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0b1120;
-      color: #e5edf8;
-      line-height: 1.7;
+      background:
+        radial-gradient(ellipse at 50% -15%, #193457 0, transparent 50%),
+        var(--bg);
+      color: var(--text);
+      font: 15px/1.75 system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
     }
-    header {
-      padding: 65px 20px;
-      text-align: center;
-      background: linear-gradient(135deg, #111c35, #173b65);
+
+    a { color: var(--blue); }
+    a:focus-visible { outline: 2px solid var(--blue); outline-offset: 4px; }
+
+    .container { width: min(1080px, 91%); margin: auto; }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(8, 13, 24, .88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
     }
-    .tag {
-      color: #7dd3fc;
-      font-size: 13px;
-      letter-spacing: 2px;
+
+    .nav-inner {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .brand { color: var(--text); text-decoration: none; font-weight: 750; }
+    .brand span { color: var(--blue); }
+
+    .nav-links { display: flex; gap: 20px; flex-wrap: wrap; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 13px; }
+    .nav-links a:hover { color: var(--blue); }
+
+    .hero { padding: 92px 0 68px; }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--blue);
+      border: 1px solid #294b68;
+      background: #102239;
+      border-radius: 100px;
+      padding: 6px 12px;
+      font-size: 11px;
+      letter-spacing: 1.6px;
       text-transform: uppercase;
     }
-    h1 { font-size: clamp(30px, 5vw, 48px); margin: 15px 0; }
-    header p { max-width: 700px; margin: auto; color: #c6d5e8; }
-    main { max-width: 1000px; margin: auto; padding: 30px 20px 60px; }
-    section {
-      margin: 24px 0;
-      padding: 24px;
-      background: #121d30;
-      border: 1px solid #293950;
-      border-radius: 14px;
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 12px #86efac88;
     }
-    h2 { color: #7dd3fc; margin-top: 0; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
-    .vpc {
-      background: #0d1728;
-      padding: 18px;
-      border-radius: 10px;
-      border: 1px solid #34465f;
+
+    h1 {
+      font-size: clamp(40px, 7vw, 72px);
+      line-height: 1.08;
+      letter-spacing: -2.8px;
+      margin: 24px 0 20px;
+      max-width: 850px;
     }
-    .ip { color: #a5b4fc; font-family: monospace; }
-    .status { color: #86efac; font-weight: bold; }
-    li { margin: 7px 0; }
-    a { color: #7dd3fc; }
-    .button {
-      display: inline-block;
-      margin: 18px 8px 0;
-      padding: 11px 18px;
-      border-radius: 8px;
-      background: #38bdf8;
-      color: #071321;
-      font-weight: bold;
+
+    h1 span {
+      background: linear-gradient(100deg, #7dd3fc, #a5b4fc);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero-copy { max-width: 700px; color: #b4c2d6; font-size: 17px; }
+
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+
+    .btn {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 17px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
       text-decoration: none;
+      font-weight: 650;
+      transition: transform .2s, border-color .2s;
     }
-    .secondary { background: transparent; color: #7dd3fc; border: 1px solid #38bdf8; }
-    footer { text-align: center; padding: 24px; color: #94a3b8; border-top: 1px solid #293950; }
+
+    .btn:hover { transform: translateY(-2px); border-color: var(--blue); }
+    .btn-primary { background: var(--blue); color: #07111e; border-color: var(--blue); }
+    .btn-secondary { color: var(--text); background: #101827; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 0 0 62px;
+    }
+
+    .stat {
+      padding: 17px;
+      background: linear-gradient(145deg, #131e30, #0d1523);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .stat strong { display: block; font-size: 22px; line-height: 1.4; }
+    .stat span { color: var(--muted); font-size: 12px; }
+
+    section { margin: 0 0 68px; }
+
+    .section-head { margin-bottom: 22px; }
+    .section-number { color: var(--blue); font: 12px/1.5 monospace; letter-spacing: 1px; }
+    h2 { font-size: clamp(25px, 4vw, 34px); line-height: 1.25; margin: 7px 0; letter-spacing: -.7px; }
+    .section-intro { color: var(--muted); max-width: 720px; margin: 8px 0 0; }
+
+    .panel {
+      background: linear-gradient(145deg, #111b2b, #0c1421);
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      padding: 23px;
+    }
+
+    .architecture {
+      display: grid;
+      grid-template-columns: 1fr 150px 1fr;
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .vpc {
+      padding: 20px;
+      border: 1px solid #34516f;
+      border-radius: 12px;
+      background: #0d1929;
+    }
+
+    .vpc-b { border-color: #51466f; background: #151426; }
+    .vpc-label { font-size: 11px; letter-spacing: 1.3px; text-transform: uppercase; color: var(--blue); }
+    .vpc-b .vpc-label { color: var(--purple); }
+    h3 { margin: 6px 0 4px; font-size: 19px; }
+    .cidr { font: 13px monospace; color: var(--muted); }
+
+    .subnet {
+      margin-top: 16px;
+      padding: 13px;
+      border-radius: 9px;
+      background: #121f31;
+      border: 1px solid #263951;
+    }
+
+    .subnet-title { font-size: 12px; color: var(--muted); }
+    .subnet code { color: var(--blue); font-size: 12px; }
+    .vpc-b .subnet code { color: var(--purple); }
+    .subnet p { font-size: 13px; margin: 8px 0 0; }
+
+    .peer {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      gap: 8px;
+    }
+
+    .peer-line { width: 100%; height: 1px; background: linear-gradient(90deg, #7dd3fc, #c4b5fd); }
+    .peer-badge { border: 1px solid #3e526e; background: #131f31; border-radius: 8px; padding: 8px; font: 11px monospace; }
+    .peer small { color: var(--green); font-size: 11px; }
+
+    .note { margin: 18px 0 0; color: var(--muted); font-size: 13px; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    .clean-list { margin: 12px 0 0; padding-left: 19px; }
+    .clean-list li { margin: 8px 0; color: #c5d1e1; }
+    .clean-list li::marker { color: var(--blue); }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .chip { border: 1px solid var(--border); border-radius: 7px; padding: 6px 10px; background: #0c1421; color: #c7d5e8; font-size: 12px; }
+
+    .results { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .result {
+      border: 1px solid var(--border);
+      background: #0d1726;
+      border-radius: 11px;
+      padding: 16px;
+    }
+    .result-top { display: flex; align-items: center; gap: 9px; font-weight: 650; }
+    .check { color: var(--green); }
+    .result p { color: var(--muted); font-size: 13px; margin: 6px 0 0; }
+
+    .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 17px; }
+    .shot {
+      overflow: hidden;
+      background: #101827;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      transition: transform .2s, border-color .2s;
+    }
+    .shot:hover { transform: translateY(-3px); border-color: #52718e; }
+    .shot img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      object-fit: contain;
+      background: #080d18;
+    }
+    .shot-info { padding: 13px 15px; }
+    .shot-info strong { display: block; font-size: 14px; }
+    .shot-info span { color: var(--muted); font-size: 12px; }
+
+    .timeline { border-left: 1px solid #38516c; margin-left: 8px; padding-left: 23px; }
+    .step { position: relative; margin: 0 0 23px; }
+    .step::before {
+      content: "";
+      position: absolute;
+      left: -29px;
+      top: 7px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--blue);
+      box-shadow: 0 0 0 4px #17273a;
+    }
+    .step h3 { font-size: 15px; }
+    .step p { color: var(--muted); margin: 5px 0 0; font-size: 14px; }
+
+    .callout {
+      padding: 15px 17px;
+      background: #171b2a;
+      border-left: 3px solid var(--purple);
+      color: #c6cce0;
+      border-radius: 0 9px 9px 0;
+      font-size: 13px;
+      margin-top: 18px;
+    }
+
+    .final-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 27px;
+      background: linear-gradient(120deg, #12243a, #17182e);
+      border: 1px solid #344b68;
+      border-radius: 15px;
+    }
+    .final-card h2 { margin-top: 0; }
+    .final-card p { color: var(--muted); margin-bottom: 0; }
+
+    footer { border-top: 1px solid var(--border); padding: 26px 0; color: var(--muted); font-size: 12px; }
+    .footer-inner { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+
+    @media (max-width: 760px) {
+      .nav-inner { padding: 12px 0; align-items: flex-start; flex-direction: column; }
+      .nav-links { gap: 13px; }
+      .hero { padding-top: 62px; }
+      h1 { letter-spacing: -1.7px; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .architecture { grid-template-columns: 1fr; }
+      .peer { min-height: 90px; }
+      .peer-line { width: 1px; height: 25px; }
+      .two-col, .results, .gallery { grid-template-columns: 1fr; }
+      .panel { padding: 17px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition: none !important; }
+    }
   </style>
 </head>
+
 <body>
-  <header>
-    <div class="tag">AWS Cloud Networking Project</div>
-    <h1>VPC Peering Architecture</h1>
-    <p>A hands-on AWS project demonstrating secure private communication between two Virtual Private Clouds using VPC Peering, route tables, security groups, and a bastion host.</p>
-    <a class="button" href="https://github.com/" id="repoLink">GitHub Repository</a>
-    <a class="button secondary" href="#architecture">Explore Architecture</a>
+  <nav>
+    <div class="container nav-inner">
+      <a class="brand" href="#">RS<span>.</span> Cloud Lab</a>
+      <div class="nav-links">
+        <a href="#architecture">Architecture</a>
+        <a href="#implementation">Build</a>
+        <a href="#testing">Testing</a>
+        <a href="#evidence">Evidence</a>
+        <a href="#learnings">Learnings</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="container hero">
+    <div class="eyebrow"><span class="dot"></span> AWS · Networking · Hands-on Project</div>
+    <h1>Connecting private networks.<br><span>Understanding the cloud.</span></h1>
+    <p class="hero-copy">
+      A practical AWS VPC Peering lab built to understand how private EC2
+      instances communicate across separate VPCs using routes, security groups
+      and controlled administrative access.
+    </p>
+    <div class="actions">
+      <a class="btn btn-primary" href="https://github.com/rsawant2005/aws-vpc-peering-project">View Repository ↗</a>
+      <a class="btn btn-secondary" href="#evidence">Explore AWS Evidence ↓</a>
+    </div>
   </header>
 
-  <main>
+  <main class="container">
+    <div class="stats" aria-label="Project summary">
+      <div class="stat"><strong>2</strong><span>Virtual Private Clouds</span></div>
+      <div class="stat"><strong>3</strong><span>Subnet route tables</span></div>
+      <div class="stat"><strong>2</strong><span>Private application EC2s</span></div>
+      <div class="stat"><strong>ap-south-1</strong><span>AWS Mumbai Region</span></div>
+    </div>
+
     <section id="architecture">
-      <h2>01 / Network Architecture</h2>
-      <div class="grid">
-        <div class="vpc">
-          <h3>VPC A</h3>
-          <p class="ip">10.10.0.0/16</p>
-          <ul>
-            <li>Public subnet: 10.10.1.0/24</li>
-            <li>Private subnet: 10.10.2.0/24</li>
-            <li>Bastion host for SSH administration</li>
-            <li>App-A: <span class="ip">10.10.2.10</span></li>
+      <div class="section-head">
+        <div class="section-number">01 / NETWORK DESIGN</div>
+        <h2>Two VPCs, one private connection</h2>
+        <p class="section-intro">
+          The networks use non-overlapping CIDR ranges. VPC Peering connects
+          their private address spaces; route tables and security groups
+          determine which traffic is allowed.
+        </p>
+      </div>
+
+      <div class="panel">
+        <div class="architecture">
+          <div class="vpc">
+            <div class="vpc-label">Network A</div>
+            <h3>VPC-A</h3>
+            <div class="cidr">10.10.0.0/16</div>
+
+            <div class="subnet">
+              <div class="subnet-title">Public subnet</div>
+              <code>10.10.1.0/24</code>
+              <p>Bastion host · Internet Gateway</p>
+            </div>
+            <div class="subnet">
+              <div class="subnet-title">Private subnet</div>
+              <code>10.10.2.0/24</code>
+              <p>App-A · <code>10.10.2.10</code></p>
+            </div>
+          </div>
+
+          <div class="peer">
+            <div class="peer-line"></div>
+            <div class="peer-badge">VPC Peering</div>
+            <small>● Active</small>
+            <div class="peer-line"></div>
+            <span style="font-size:11px;color:var(--muted)">Private IP routing</span>
+          </div>
+
+          <div class="vpc vpc-b">
+            <div class="vpc-label">Network B</div>
+            <h3>VPC-B</h3>
+            <div class="cidr">10.20.0.0/16</div>
+
+            <div class="subnet">
+              <div class="subnet-title">Private subnet</div>
+              <code>10.20.1.0/24</code>
+              <p>App-B · <code>10.20.1.10</code></p>
+            </div>
+            <div class="subnet">
+              <div class="subnet-title">Exposure</div>
+              <code>No public IPv4</code>
+              <p>Private application access via the bastion path.</p>
+            </div>
+          </div>
+        </div>
+        <p class="note">
+          Simplified logical diagram, not a live AWS topology. VPC peering is
+          not a gateway to the other VPC's internet connection.
+        </p>
+      </div>
+    </section>
+
+    <section id="implementation">
+      <div class="section-head">
+        <div class="section-number">02 / IMPLEMENTATION</div>
+        <h2>How the environment was built</h2>
+        <p class="section-intro">The lab was assembled in small steps, with routing and access rules configured explicitly.</p>
+      </div>
+
+      <div class="two-col">
+        <div class="panel">
+          <h3>Build sequence</h3>
+          <div class="timeline">
+            <div class="step">
+              <h3>01 — Create the networks</h3>
+              <p>Created two VPCs and their public/private subnet layout.</p>
+            </div>
+            <div class="step">
+              <h3>02 — Configure routing</h3>
+              <p>Set subnet route-table associations and the required peering routes.</p>
+            </div>
+            <div class="step">
+              <h3>03 — Set up access</h3>
+              <p>Configured the bastion host and security groups for administration and ICMP testing.</p>
+            </div>
+            <div class="step">
+              <h3>04 — Validate connectivity</h3>
+              <p>Used SSH and ping to test access and private network communication.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Services and tools</h3>
+          <p style="color:var(--muted)">The AWS services and command-line tools used in the lab.</p>
+          <div class="chips">
+            <span class="chip">Amazon VPC</span>
+            <span class="chip">VPC Peering</span>
+            <span class="chip">Amazon EC2</span>
+            <span class="chip">Route Tables</span>
+            <span class="chip">Internet Gateway</span>
+            <span class="chip">Security Groups</span>
+            <span class="chip">IAM</span>
+            <span class="chip">Linux</span>
+            <span class="chip">SSH</span>
+            <span class="chip">ICMP / ping</span>
+          </div>
+          <div class="callout">
+            Region: Mumbai (`ap-south-1`). No NAT Gateway was required for this
+            private connectivity lab.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="testing">
+      <div class="section-head">
+        <div class="section-number">03 / VALIDATION</div>
+        <h2>Test the path, not just the configuration</h2>
+        <p class="section-intro">
+          A route alone does not guarantee connectivity. The return route,
+          security-group rules and instance-level reachability also matter.
+        </p>
+      </div>
+
+      <div class="results">
+        <div class="result">
+          <div class="result-top"><span class="check">✓</span> Bastion → App-A</div>
+          <p>SSH connection to the private instance succeeded.</p>
+        </div>
+        <div class="result">
+          <div class="result-top"><span class="check">✓</span> Bastion → App-B</div>
+          <p>SSH connection to App-B through the bastion path succeeded.</p>
+        </div>
+        <div class="result">
+          <div class="result-top"><span class="check">✓</span> App-A → App-B</div>
+          <p>Private ping test succeeded with 4 replies and 0% packet loss.</p>
+        </div>
+        <div class="result">
+          <div class="result-top"><span class="check">✓</span> App-B → App-A</div>
+          <p>Reverse-direction ping succeeded during testing.</p>
+        </div>
+      </div>
+
+      <div class="callout">
+        Results describe the lab tests performed at the time. The original
+        pre-peering baseline failure was not captured, so this showcase does
+        not present it as documented evidence.
+      </div>
+    </section>
+
+    <section id="evidence">
+      <div class="section-head">
+        <div class="section-number">04 / PROJECT EVIDENCE</div>
+        <h2>Configuration and terminal screenshots</h2>
+        <p class="section-intro">
+          These images are loaded directly from the repository's
+          <code>evidence/</code> directory. Select an image to open the original.
+        </p>
+      </div>
+
+      <div class="gallery">
+        <a class="shot" href="evidence/01-vpc-peering-active.png">
+          <img src="evidence/01-vpc-peering-active.png" alt="AWS VPC Peering connection status" loading="lazy">
+          <div class="shot-info"><strong>01 · Peering connection</strong><span>Connection status in AWS</span></div>
+        </a>
+
+        <a class="shot" href="evidence/02a-public-route-table.png">
+          <img src="evidence/02a-public-route-table.png" alt="VPC-A public route table" loading="lazy">
+          <div class="shot-info"><strong>02a · Public route table</strong><span>VPC-A internet and network routes</span></div>
+        </a>
+
+        <a class="shot" href="evidence/02b-vpc-a-private-route-table.png">
+          <img src="evidence/02b-vpc-a-private-route-table.png" alt="VPC-A private route table" loading="lazy">
+          <div class="shot-info"><strong>02b · VPC-A private routes</strong><span>Private subnet routing</span></div>
+        </a>
+
+        <a class="shot" href="evidence/02c-vpc-b-private-route-table.png">
+          <img src="evidence/02c-vpc-b-private-route-table.png" alt="VPC-B private route table" loading="lazy">
+          <div class="shot-info"><strong>02c · VPC-B private routes</strong><span>Return route toward VPC-A</span></div>
+        </a>
+
+        <a class="shot" href="evidence/03-app-a-to-app-b-ping.png">
+          <img src="evidence/03-app-a-to-app-b-ping.png" alt="Ping test from App-A to App-B" loading="lazy">
+          <div class="shot-info"><strong>03 · Forward connectivity</strong><span>App-A → App-B</span></div>
+        </a>
+
+        <a class="shot" href="evidence/04-app-b-to-app-a-ping.png">
+          <img src="evidence/04-app-b-to-app-a-ping.png" alt="Reverse ping test evidence" loading="lazy">
+          <div class="shot-info"><strong>04 · Reverse connectivity</strong><span>App-B → App-A — verify the destination shown in the terminal</span></div>
+        </a>
+
+        <a class="shot" href="evidence/05-app-b-ssh-via-bastion.png">
+          <img src="evidence/05-app-b-ssh-via-bastion.png" alt="SSH session to App-B through bastion" loading="lazy">
+          <div class="shot-info"><strong>05 · Bastion access</strong><span>SSH session to App-B</span></div>
+        </a>
+
+        <a class="shot" href="evidence/06-controlled-ping-failure.png">
+          <img src="evidence/06-controlled-ping-failure.png" alt="Controlled ping failure test" loading="lazy">
+          <div class="shot-info"><strong>06 · Controlled failure</strong><span>Connectivity troubleshooting evidence</span></div>
+        </a>
+
+        <a class="shot" href="evidence/07-controlled-ping-recovery.png">
+          <img src="evidence/07-controlled-ping-recovery.png" alt="Connectivity recovery test" loading="lazy">
+          <div class="shot-info"><strong>07 · Recovery</strong><span>Connectivity after restoring the rule</span></div>
+        </a>
+      </div>
+
+      <p class="note">
+        If an image does not appear, check that the filename and capitalization
+        match the file in the repository exactly.
+      </p>
+    </section>
+
+    <section id="learnings">
+      <div class="section-head">
+        <div class="section-number">05 / LESSONS LEARNED</div>
+        <h2>What this lab taught me</h2>
+      </div>
+
+      <div class="panel">
+        <ul class="clean-list">
+          <li>VPC peering needs explicit routes in both directions for private communication.</li>
+          <li>Security groups must allow the intended traffic and the correct source.</li>
+          <li>A bastion host provides a controlled administration path to private instances.</li>
+          <li>SSH access and ICMP connectivity are separate tests with different rules.</li>
+          <li>Temporarily changing an ICMP rule helped demonstrate how filtering affects connectivity, then how restoring the rule recovers it.</li>
+          <li>Evidence should show the actual configuration and commands, including limitations or tests that were not captured.</li>
+        </ul>
+      </div>
+
+      <div class="two-col" style="margin-top:16px">
+        <div class="panel">
+          <h3>Security choices</h3>
+          <ul class="clean-list">
+            <li>Application EC2 instances have no public IPv4 addresses.</li>
+            <li>Bastion SSH ingress is restricted to a client IP range.</li>
+            <li>Private-instance SSH ingress is limited to the bastion private IP.</li>
+            <li>No private key or AWS credential belongs in this repository.</li>
           </ul>
         </div>
-        <div class="vpc">
-          <h3>VPC B</h3>
-          <p class="ip">10.20.0.0/16</p>
-          <ul>
-            <li>Private subnet: 10.20.1.0/24</li>
-            <li>App-B: <span class="ip">10.20.1.10</span></li>
-            <li>No public IPv4 on App-B</li>
-            <li>Private routes to VPC A</li>
+        <div class="panel">
+          <h3>Scope and limitations</h3>
+          <ul class="clean-list">
+            <li>This is a learning lab, not a production deployment.</li>
+            <li>The architecture graphic is a simplified representation.</li>
+            <li>The original pre-peering failure was not captured.</li>
+            <li>Live AWS resources and their availability are not monitored by this website.</li>
           </ul>
         </div>
       </div>
-      <p><strong>Connection:</strong> An active VPC Peering connection links both VPCs. Route tables direct traffic to the remote VPC through the peering connection.</p>
     </section>
 
     <section>
-      <h2>02 / Technologies Used</h2>
-      <p>Amazon VPC · VPC Peering · Amazon EC2 · Route Tables · Internet Gateway · Security Groups · AWS IAM · Linux · SSH</p>
-    </section>
-
-    <section>
-      <h2>03 / Implementation</h2>
-      <ol>
-        <li>Created two VPCs with non-overlapping CIDR ranges.</li>
-        <li>Configured public and private subnets.</li>
-        <li>Created and activated the VPC Peering connection.</li>
-        <li>Configured route tables and security-group rules.</li>
-        <li>Launched a bastion host and two private EC2 instances.</li>
-        <li>Connected to both private instances through SSH.</li>
-        <li>Validated communication between the private instances in both directions.</li>
-      </ol>
-    </section>
-
-    <section>
-      <h2>04 / Testing & Results</h2>
-      <p class="status">✓ App-A → App-B: Ping successful</p>
-      <p class="status">✓ App-B → App-A: Ping successful</p>
-      <p class="status">✓ SSH from bastion to both private instances: Successful</p>
-      <p>These results confirm private connectivity through the configured peering routes and security-group rules at the time of testing.</p>
-    </section>
-
-    <section>
-      <h2>05 / Security Practices</h2>
-      <ul>
-        <li>Application instances have no public IPv4 addresses.</li>
-        <li>Bastion SSH access is restricted to a specific client IP.</li>
-        <li>Security groups permit only the required test and administrative traffic.</li>
-        <li>No private keys or AWS credentials are published on this page.</li>
-      </ul>
-    </section>
-
-    <section>
-      <h2>06 / Key Learnings</h2>
-      <p>Practical experience with cloud network design, subnetting, route propagation concepts, private EC2 access, SSH agent forwarding, security-group troubleshooting, and end-to-end connectivity validation.</p>
-    </section>
-
-    <section>
-      <h2>Project Source</h2>
-      <p>Explore the repository for project documentation and implementation details.</p>
-      <a href="https://github.com/" id="repoLinkBottom">Open GitHub Repository →</a>
+      <div class="final-card">
+        <div>
+          <div class="section-number">NEXT STEP / SOURCE</div>
+          <h2>Explore the project repository</h2>
+          <p>Read the README and browse the implementation evidence.</p>
+        </div>
+        <div class="actions" style="margin:0">
+          <a class="btn btn-primary" href="https://github.com/rsawant2005/aws-vpc-peering-project">View Source ↗</a>
+          <a class="btn btn-secondary" href="https://github.com/rsawant2005/aws-vpc-peering-project/tree/main/evidence">Browse Evidence ↗</a>
+        </div>
+      </div>
     </section>
   </main>
 
   <footer>
-    AWS VPC Peering Project · Educational Portfolio Showcase
+    <div class="container footer-inner">
+      <span>AWS VPC Peering · Learning project</span>
+      <span>Built and documented by Roshan Sawant</span>
+    </div>
   </footer>
-
-  <script>
-    // Replace YOUR_USERNAME with your GitHub username.
-    const repository = "https://github.com/rsawant2005/aws-vpc-peering-project";
-    document.getElementById("repoLink").href = repository;
-    document.getElementById("repoLinkBottom").href = repository;
-  </script>
 </body>
 </html>
+
