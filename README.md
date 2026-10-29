@@ -51,4 +51,44 @@ This project strengthened my practical understanding of AWS networking, subnet d
 ## Project Status
 Core networking and bidirectional connectivity tests completed successfully.
 
-**Note:** This repository documents the project. The GitHub Pages website will serve as a public project showcase; the AWS network itself remains a private cloud environment.
+## Project Evidence
+
+The following screenshots document the configuration and connectivity tests performed during the project.
+
+### 1. VPC Peering Connection
+
+![Active VPC Peering](evidence/01-vpc-peering-active.png)
+
+### 2. Route Table Configuration
+
+**VPC-A Public Route Table**
+
+![VPC-A Public Routes](evidence/02a-public-route-table.png)
+
+**VPC-A Private Route Table**
+
+![VPC-A Private Routes](evidence/02b-vpc-a-private-route-table.png)
+
+**VPC-B Private Route Table**
+
+![VPC-B Private Routes](evidence/02c-vpc-b-private-route-table.png)
+
+### 3. Connectivity Tests
+
+**App-A to App-B**
+
+![Forward Ping Test](evidence/03-app-a-to-app-b-ping.png)
+
+**App-B to App-A**
+
+![Reverse Ping Test](evidence/04-app-b-to-app-a-ping.png)
+
+### 4. Bastion Host Access
+
+![SSH to App-B through Bastion](evidence/05-app-b-ssh-via-bastion.png)
+
+### 5. Failure and Recovery
+
+![Controlled Ping Failure](evidence/06-controlled-ping-failure.png)
+
+![Connectivity Recovery](evidence/07-controlled-ping-recovery.png)
