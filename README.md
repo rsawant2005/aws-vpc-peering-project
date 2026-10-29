@@ -5,17 +5,11 @@ This project demonstrates secure private communication between two Amazon Virtua
 
 ## Architecture
 
-**VPC A — `10.10.0.0/16`**
-- Public subnet: `10.10.1.0/24`
-- Private subnet: `10.10.2.0/24`
-- Internet Gateway for the public subnet
-- Bastion host for administrative SSH access
-- Private EC2 instance: App-A (`10.10.2.10`)
+The project uses two VPCs in the AWS Mumbai Region (`ap-south-1`).
+VPC Peering provides private communication between their CIDR ranges.
 
-**VPC B — `10.20.0.0/16`**
-- Private subnet: `10.20.1.0/24`
-- Private EC2 instance: App-B (`10.20.1.10`)
-- No public IP assigned to App-B
+
+**Traffic design:** Administrative SSH access goes through the bastion host. App-A and App-B communicate over private IP addresses through the peering connection and the configured route tables.
 
 **VPC Peering:** Connects VPC A and VPC B, allowing private communication through configured routes.
 
