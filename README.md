@@ -1,5 +1,7 @@
 # AWS VPC Peering Project
 
+# Code for Off campus - 6CZ9BH
+
 ## Project Overview
 This project demonstrates secure private communication between two Amazon Virtual Private Clouds (VPCs) using AWS VPC Peering. It uses private EC2 instances, route tables, security groups, and a bastion host to validate connectivity.
 
